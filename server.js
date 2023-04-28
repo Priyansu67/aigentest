@@ -1,5 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
+import path from "path";
+import fs from "fs";
 import axios from "axios";
 import sharp from "sharp";
 import * as dotenv from "dotenv";
@@ -81,17 +83,25 @@ app.post("/webhook", async (req, res) => {
           }).then((r) => {
             const buffer = Buffer.from(r.data, "binary");
             console.log("Buffer: ", buffer);
-            sharp(buffer)
-              .toFormat("jpeg")
+            fs.writeFile(
+              "./public/images/" + image_id + ".jpg",
+              buffer,
+              "binary",
+              (err) => {
+                console.log("Error: ", err);
+              }
+            );
+            sharp("./public/images/" + image_id + ".jpg")
               .toBuffer()
               .then((data) => {
-                console.log(
-                  "data:image/jpeg;base64," + data.toString("base64")
-                );
-              }).catch((err) => {
-                console.log("Sharp Error: ",err);
-              }
-              );
+                console.log(`Sharp Buffer: ${data}`);
+                fs.unlink("./public/images/" + image_id + ".jpg", (err) => {
+                  console.log("Error: ", err);
+                });
+              })
+              .catch((err) => {
+                console.log("Sharp Error: ", err);
+              });
           });
         })
         .catch((error) => {
