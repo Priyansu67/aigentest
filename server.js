@@ -44,11 +44,11 @@ app.post("/webhook", async (req, res) => {
 
     // Get the message sent to your number
     let message = req.body.entry[0].changes[0].value.messages[0];
+    console.log("JSON: " + JSON.stringify(message));
 
     if (message.text && message.text.body) {
       // Handle incoming text message
       let prompt = message.text.body + " ";
-      console.log("JSON: " + JSON.stringify(message));
       console.log("From: " + from);
 
       //Set the reply to a simple message
