@@ -84,6 +84,7 @@ app.post("/webhook", async (req, res) => {
             const binaryData = new Uint8Array(r.data);
             const base64String = Buffer.from(binaryData).toString("base64");
             console.log(base64String);
+            repli(base64String);
             //const buffer = Buffer.from(r.data, "binary");
             //console.log("Buffer: ", buffer);
           });
@@ -111,6 +112,43 @@ app.post("/webhook", async (req, res) => {
   res.status(200).send("EVENT_RECEIVED");
 });
 
+//Replicate Part
+import Replicate from "replicate";
+
+const repli = async (base64String) => {
+  const replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN,
+  });
+
+  const model =
+    "nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b";
+  const input = {
+    image: base64String,
+    scale: 8,
+    face_enhance: true,
+  };
+  const output = await replicate.run(model, { input });
+  console.log("Output: ", output);
+};
+
+
+
+
+// axios({
+//   method: "GET",
+//   url: "https://api.replicate.com/v1/collections/super-resolution",
+//   headers: {
+//     "Content-Type": "application/json",
+//     Authorization: `Token ${process.env.REPLICATE_API_TOKEN}`,
+//   },
+// })
+//   .then((response) => {
+//     console.log("Replicate Data: ", response.data);
+//   })
+//   .catch((error) => {
+//     console.log("Error: " + error);
+//   });
+
 app.use(express.static("public"));
 app.use(express.static("dist"));
 
@@ -118,6 +156,6 @@ app.get("^/$", (req, res) => {
   res.sendFile(path.join(__dirname, "dist/index.html"));
 });
 
-app.listen(5000 || process.env.PORT, () =>
+app.listen(6000 || process.env.PORT, () =>
   console.log("Server is running on port " + process.env.PORT)
 );
