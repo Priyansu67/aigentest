@@ -80,8 +80,10 @@ app.post("/webhook", async (req, res) => {
               Authorization: `Bearer ${access_token}`,
             },
           }).then((r) => {
-            console.log("Response: ", r);
-            console.log("Data: ", JSON.stringify(r.data));
+            console.log("API Data: ", r.data);
+            const binaryData = new Uint8Array(r.data);
+            const base64String = Buffer.from(binaryData).toString("base64");
+            console.log(base64String);
             //const buffer = Buffer.from(r.data, "binary");
             //console.log("Buffer: ", buffer);
           });
