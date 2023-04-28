@@ -64,33 +64,15 @@ app.post("/webhook", async (req, res) => {
         url: "https://graph.facebook.com/v15.0/" + image_id,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + access_token,
+          Authorization: `Bearer ${access_token}`,
         },
-      }).then((response) => {
-        console.log("Image URL: " + response);
-      }).catch((error) => {
-        console.log(error);
-      });
-
-      if (attachment.type === "image") {
-        // Handle incoming image
-        let image_url = attachment.payload.url;
-        console.log("Image URL: " + image_url);
-
-        // Download image and save to server or process as needed
-        // ...
-
-        reply = "Thanks for the image!";
-      } else if (attachment.type === "document") {
-        // Handle incoming document
-        let document_url = attachment.payload.url;
-        console.log("Document URL: " + document_url);
-
-        // Download document and save to server or process as needed
-        // ...
-
-        reply = "Thanks for the document!";
-      }
+      })
+        .then((response) => {
+          console.log("Image URL: " + JSON.stringify(response.data,null,2));
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     }
 
     axios({
