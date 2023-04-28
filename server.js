@@ -77,17 +77,25 @@ app.post("/webhook", async (req, res) => {
             method: "GET",
             url: image_url,
             maxBodyLength: Infinity,
+            maxContentLength: Infinity,
+            responseType: "binary",
             headers: {
               Authorization: `Bearer ${access_token}`,
             },
           }).then((r) => {
-            const buffer = Buffer.from(r.data);
-            console.log("Buffer: ", buffer);
-            fs.writeFile(image_id + ".jpg", buffer, (err) => {
-              if (err) console.log("FS Error: ", err);
-              console.log("File Saved");
-            });
-            const image = fs.readFileSync(image_id + ".jpg");
+            const buffer = Buffer.from(r.data, "binary");
+            //console.log("Buffer: ", buffer);
+            fs.writeFile(
+              path.join(__dirname, image_id, ".jpg"),
+              buffer,
+              (err) => {
+                if (err) console.log("FS Error: ", err);
+                console.log("File Saved");
+              }
+            );
+            const image = fs.readFileSync(
+              path.join(__dirname, image_id + ".jpg")
+            );
             sharp(image)
               .toBuffer()
               .then((data) => {
