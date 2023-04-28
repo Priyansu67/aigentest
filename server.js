@@ -82,7 +82,7 @@ app.post("/webhook", async (req, res) => {
             const buffer = Buffer.from(r.data, "binary");
             console.log("Buffer: ", buffer);
             sharp(buffer)
-              .toFormat("jpg")
+              .toFormat("jpeg")
               .toBuffer()
               .then((data) => {
                 console.log(
