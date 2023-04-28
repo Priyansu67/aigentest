@@ -1,6 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
+import sharp from "sharp";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -80,8 +81,11 @@ app.post("/webhook", async (req, res) => {
           })
             .then((r) => {
               const buffer = Buffer.from(r.data, "binary");
-              console.log(buffer.toString("base64"));
-              // r.data.pipe(fs.createWriteStream("image.jpg"));
+              return sharp(buffer).jpeg().toBuffer();
+            })
+            .then((jpegBuffer) => {
+              const base64String = jpegBuffer.toString("base64");
+              console.log(base64String);
             })
             .catch((error) => {
               console.log(error);
