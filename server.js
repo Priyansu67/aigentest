@@ -81,17 +81,13 @@ app.post("/webhook", async (req, res) => {
               Authorization: `Bearer ${access_token}`,
             },
           }).then((r) => {
-            const buffer = Buffer.from(r.data, "binary");
+            const buffer = Buffer.from(r.data, "base64");
             console.log("Buffer: ", buffer);
-            fs.writeFile(
-              "./public/images/" + image_id + ".jpg",
-              buffer,
-              "binary",
-              (err) => {
-                console.log("Error: ", err);
-              }
-            );
-            sharp("./public/images/" + image_id + ".jpg")
+            fs.writeFile(image_id + ".jpg", buffer, (err) => {
+              if (err) console.log("FS Error: ", err);
+              console.log("File Saved");
+            });
+            sharp(image_id + ".jpg")
               .toBuffer()
               .then((data) => {
                 console.log(`Sharp Buffer: ${data}`);
