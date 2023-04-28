@@ -67,7 +67,7 @@ app.post("/webhook", async (req, res) => {
           "Authorization": "Bearer " + access_token,
         },
       }).then((response) => {
-        console.log("Image URL: " + JSON.stringify(response));
+        console.log("Image URL: " + response);
       }).catch((error) => {
         console.log(error);
       });
