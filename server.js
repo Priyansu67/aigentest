@@ -79,7 +79,7 @@ app.post("/webhook", async (req, res) => {
             },
           })
             .then((r) => {
-              const buffer = Buffer.from(r.data);
+              const buffer = Buffer.from(r.data, "binary");
               console.log(buffer.toString("base64"));
               // r.data.pipe(fs.createWriteStream("image.jpg"));
             })
