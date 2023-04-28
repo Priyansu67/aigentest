@@ -48,7 +48,9 @@ app.post("/webhook", async (req, res) => {
     if (message.text && message.text.body) {
       // Handle incoming text message
       let prompt = message.text.body + " ";
-      console.log("Text Message: " + prompt);
+      console.log("JSON: " + JSON.stringify(message));
+      console.log("From: " + from);
+
       //Set the reply to a simple message
       reply = "Hey";
     } else if (message.attachments && message.attachments.length > 0) {
