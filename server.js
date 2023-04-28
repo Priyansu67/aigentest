@@ -73,7 +73,9 @@ app.post("/webhook", async (req, res) => {
           await axios({
             method: "GET",
             url: image_url,
-            responseType: "stream",
+            headers: {
+              Authorization: `Bearer ${access_token}`,
+            },
           })
             .then((r) => {
               console.log("Image: " + JSON.stringify(r.data, null, 2));
