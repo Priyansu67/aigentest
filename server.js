@@ -53,10 +53,22 @@ app.post("/webhook", async (req, res) => {
 
       //Set the reply to a simple message
       reply = "Hey";
-    } else if (message.attachments && message.attachments.length > 0) {
+    } else if (message.image.id) {
       // Handle incoming media message
-      let attachment = message.attachments[0];
-      console.log("Media Message: " + attachment.type);
+      let image_id = message.image.id;
+      console.log("Media Message ID: " + image_id);
+
+      // Download image and save to server or process as needed
+      axios({
+        method: "GET",
+        url: "https://graph.facebook.com/v15.0/" + image_id,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + access_token,
+        },
+      }).then((response) => {
+        console.log("Image URL: " + response);
+      });
 
       if (attachment.type === "image") {
         // Handle incoming image
