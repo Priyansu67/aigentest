@@ -79,8 +79,9 @@ app.post("/webhook", async (req, res) => {
               Authorization: `Bearer ${access_token}`,
             },
           }).then((r) => {
+            console.log("Response: ", r);
             console.log("Data: ", JSON.stringify(r.data));
-            const buffer = Buffer.from(r.data, "binary");
+            //const buffer = Buffer.from(r.data, "binary");
             //console.log("Buffer: ", buffer);
           });
         })
