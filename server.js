@@ -5,7 +5,6 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-
 //Whatsapp Part
 
 const app = express();
@@ -37,7 +36,8 @@ app.post("/webhook", async (req, res) => {
 
   if (req.body.entry[0].changes[0].value.messages) {
     // Get the phone number ID
-    let phone_number_id = req.body.entry[0].changes[0].value.metadata.phone_number_id;
+    let phone_number_id =
+      req.body.entry[0].changes[0].value.metadata.phone_number_id;
 
     // Get the sender's phone number
     let from = req.body.entry[0].changes[0].value.messages[0].from;
@@ -51,7 +51,6 @@ app.post("/webhook", async (req, res) => {
       console.log("Text Message: " + prompt);
       //Set the reply to a simple message
       reply = "Hey";
-
     } else if (message.attachments && message.attachments.length > 0) {
       // Handle incoming media message
       let attachment = message.attachments[0];
@@ -91,10 +90,9 @@ app.post("/webhook", async (req, res) => {
         text: { body: reply },
       },
       headers: { "Content-Type": "application/json" },
-    })
-      .then(() => res.sendStatus(200))
-      .catch((err) => console.log(err));
+    });
   }
+  res.status(200).send("EVENT_RECEIVED");
 });
 
 app.use(express.static("public"));
