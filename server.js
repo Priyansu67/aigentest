@@ -59,7 +59,7 @@ app.post("/webhook", async (req, res) => {
       console.log("Media Message ID: " + image_id);
 
       // Download image and save to server or process as needed
-      axios({
+      await axios({
         method: "GET",
         url: "https://graph.facebook.com/v15.0/" + image_id,
         headers: {
@@ -67,7 +67,9 @@ app.post("/webhook", async (req, res) => {
           "Authorization": "Bearer " + access_token,
         },
       }).then((response) => {
-        console.log("Image URL: " + response);
+        console.log("Image URL: " + JSON.stringify(response));
+      }).catch((error) => {
+        console.log(error);
       });
 
       if (attachment.type === "image") {
