@@ -80,17 +80,19 @@ app.post("/webhook", async (req, res) => {
             },
           }).then((r) => {
             console.log(r.data);
-            const buffer = Buffer.from(r.data, "binary", "utf8");
-            console.log("Buffer: ",buffer);
+            const buffer = Buffer.from(r.data, "binary");
+            console.log("Buffer: ", buffer);
             sharp(buffer)
-              .toFormat("jpeg")
+              .toFormat("jpg")
               .toBuffer()
               .then((data) => {
-                console.log("Data: ",data);
-              })
-              .catch((error) => {
-                console.log("Sharp Error: ",error);
-              });
+                console.log(
+                  "data:image/jpeg;base64," + data.toString("base64")
+                );
+              }).catch((err) => {
+                console.log("Sharp Error: ",err);
+              }
+              );
           });
         })
         .catch((error) => {
