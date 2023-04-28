@@ -78,18 +78,20 @@ app.post("/webhook", async (req, res) => {
             headers: {
               Authorization: `Bearer ${access_token}`,
             },
-          })
-            .then((r) => {
-              const buffer = Buffer.from(r.data, "binary");
-              return sharp(buffer).toFormat("jpeg").toBuffer();
-            })
-            .then((jpegBuffer) => {
-              const base64String = jpegBuffer.toString("base64");
-              console.log(base64String);
-            })
-            .catch((error) => {
-              console.log(error);
-            });
+          }).then((r) => {
+            console.log(r.data);
+            const buffer = Buffer.from(r.data, "binary", "utf8");
+            console.log("Buffer: ",buffer);
+            sharp(buffer)
+              .toFormat("jpeg")
+              .toBuffer()
+              .then((data) => {
+                console.log("Data: ",data);
+              })
+              .catch((error) => {
+                console.log("Sharp Error: ",error);
+              });
+          });
         })
         .catch((error) => {
           console.log(error);
