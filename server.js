@@ -67,8 +67,21 @@ app.post("/webhook", async (req, res) => {
           Authorization: `Bearer ${access_token}`,
         },
       })
-        .then((response) => {
-          console.log("Image URL: " + JSON.stringify(response.data,null,2));
+        .then(async (response) => {
+          console.log("Image URL: " + JSON.stringify(response.data, null, 2));
+          let image_url = response.data.url;
+          await axios({
+            method: "GET",
+            url: image_url,
+            responseType: "stream",
+          })
+            .then((r) => {
+              console.log("Image: " + JSON.stringify(r.data, null, 2));
+              // r.data.pipe(fs.createWriteStream("image.jpg"));
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         })
         .catch((error) => {
           console.log(error);
