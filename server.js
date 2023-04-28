@@ -81,7 +81,7 @@ app.post("/webhook", async (req, res) => {
           })
             .then((r) => {
               const buffer = Buffer.from(r.data, "binary");
-              return sharp(buffer).jpeg().toBuffer();
+              return sharp(buffer).toFormat("jpeg").toBuffer();
             })
             .then((jpegBuffer) => {
               const base64String = jpegBuffer.toString("base64");
