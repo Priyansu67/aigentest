@@ -75,6 +75,7 @@ app.post("/webhook", async (req, res) => {
             method: "GET",
             url: image_url,
             maxBodyLength: Infinity,
+            responseType: "arraybuffer",
             headers: {
               Authorization: `Bearer ${access_token}`,
             },
