@@ -132,10 +132,8 @@ app.post("/webhook", async (req, res) => {
             const binaryData = new Uint8Array(r.data);
             const buffer = Buffer.from(binaryData);
             const awsres = await uploadToS3(image_id + ".jpg", buffer);
-            console.log(
-              "AWS Response: " + JSON.stringify(awsres.Location, null, 2)
-            );
             const image_url = JSON.stringify(awsres.Location, null, 2);
+            console.log("AWS URL: " + image_url);
             await repli(image_url).then((rep) => {
               console.log(JSON.stringify(rep, null, 2));
             }).catch((error) => {
