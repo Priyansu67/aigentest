@@ -93,6 +93,8 @@ app.post("/webhook", async (req, res) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${access_token}`,
         },
+      }).catch((error) => {
+        console.log(error);
       });
 
       const { url, mime_type: mimeType } = response.data;
@@ -105,13 +107,17 @@ app.post("/webhook", async (req, res) => {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },
+      }).catch((error) => {
+        console.log(error);
       });
 
       const binaryData = new Uint8Array(imageResponse.data);
       const buffer = Buffer.from(binaryData);
       const base64String = `data:${mimeType};base64,${buffer.toString("base64")}`;
 
-      const repliResponse = await repli(base64String);
+      const repliResponse = await repli(base64String).catch((error) => {
+        console.log(error);
+      });
       reply = repliResponse;
     }
 
@@ -154,7 +160,7 @@ const repliPrompt = async (prompt) => {
 
   const input = {
     prompt: prompt,
-    scale: 8,
+    scale: 5,
     face_enhance: true,
   };
   const output = await replicate.run(model, { input });
