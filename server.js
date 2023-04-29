@@ -3,9 +3,56 @@ import bodyParser from "body-parser";
 import path from "path";
 import axios from "axios";
 import * as dotenv from "dotenv";
-import { uploadToS3, deleteFromS3 } from "./aws_controller";
 
 dotenv.config();
+
+//AWS Part
+import aws from "aws-sdk";
+
+//AWS Configuration
+const AWSConfig = {
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+};
+aws.config.update(AWSConfig);
+
+//AWS S3
+const s3 = new aws.S3();
+
+const uploadToS3 = (name, buffer) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: name,
+      Body: buffer,
+      ACL: "public-read",
+    };
+    s3.upload(params, (error, data) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      }
+      return resolve(data);
+    });
+  });
+};
+
+const deleteFromS3 = (fileKey) => {
+  return new Promise((resolve, reject) => {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: fileKey,
+    };
+    s3.deleteObject(params, (error, data) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      }
+      return resolve(data);
+    });
+  });
+};
 
 //Whatsapp Part
 
