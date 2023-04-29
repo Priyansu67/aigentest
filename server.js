@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import path from "path";
 import axios from "axios";
 import Replicate from "replicate";
+import fetch from "node-fetch";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -182,6 +183,7 @@ app.post("/webhook", async (req, res) => {
 const repli = async (imageURL) => {
   const replicate = new Replicate({
     auth: process.env.REPLICATE_API_TOKEN,
+    fetch: fetch,
   });
 
   const model =
