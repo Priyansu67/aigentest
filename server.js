@@ -6,17 +6,12 @@ import axios from "axios";
 import Replicate from "replicate";
 import fetch from "node-fetch";
 import * as dotenv from "dotenv";
-
 dotenv.config();
-
-//Chat GPT
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
 const openai = new OpenAIApi(configuration);
-
 async function botMessage(prompt) {
   const completion = await openai.createCompletion({
     model: "text-davinci-003",
@@ -27,8 +22,6 @@ async function botMessage(prompt) {
     presence_penalty: 0,
     frequency_penalty: 0,
   });
-  
-  console.log(JSON.stringify(completion.data, null, 1));
   return completion.data.choices[0].text;
 }
 
@@ -76,95 +69,60 @@ const sendMessage = (phone_number_id, from, reply) => {
 };
 
 app.post("/webhook", async (req, res) => {
-  let reply = "Hey";
+  try {
+    const { entry } = req.body;
+    const { phone_number_id, from, message } = entry[0].changes[0].value;
 
-  if (req.body.entry[0].changes[0].value.messages) {
-    let phone_number_id =
-      req.body.entry[0].changes[0].value.metadata.phone_number_id;
-    let from = req.body.entry[0].changes[0].value.messages[0].from;
-    let message = req.body.entry[0].changes[0].value.messages[0];
+    let reply = "Hey";
 
-    if (message.text && message.text.body) {
-      // Handle incoming text message
-      let prompt = message.text.body + " ";
-      //console.log("From: " + from);
-      //Set the reply to a simple message
+    if (message && message.text && message.text.body) {
+      const prompt = message.text.body.trim();
+
       if (prompt.startsWith("/imagine")) {
-        prompt = prompt.replace("/imagine", "");
-        await repliPrompt(prompt)
-          .then((rep) => {
-            reply = rep[0];
-            sendMessage(phone_number_id, from, reply);
-            res.sendStatus(200);
-            res.end();
-            return;
-          })
-          .catch((error) => {
-            console.log("Repli Error: " + error);
-            res.sendStatus(500);
-            return;
-          });
+        const repliResponse = await repliPrompt(prompt.replace("/imagine", ""));
+        reply = repliResponse[0];
       } else {
         reply = await botMessage(prompt);
-        //Send the reply
-        sendMessage(phone_number_id, from, reply);
-        res.sendStatus(200);
-        res.end();
       }
-    } else if (message.image.id) {
-      // Handle incoming media message
-      let image_id = message.image.id;
-      //console.log("Media Message ID: " + image_id);
-
-      // Download image and save to server or process as needed
-      await axios({
+    } else if (message && message.image && message.image.id) {
+      const { id } = message.image;
+      const response = await axios({
         method: "GET",
-        url: "https://graph.facebook.com/v15.0/" + image_id,
+        url: `https://graph.facebook.com/v15.0/${id}`,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${access_token}`,
         },
-      })
-        .then(async (response) => {
-          //console.log("Image URL: " + JSON.stringify(response.data, null, 2));
-          let image_url = response.data.url;
-          let mimeType = response.data.mime_type;
-          await axios({
-            method: "GET",
-            url: image_url,
-            maxBodyLength: Infinity,
-            responseType: "arraybuffer",
-            headers: {
-              Authorization: `Bearer ${access_token}`,
-            },
-          }).then(async (r) => {
-            //console.log("API Data: ", r.data);
-            const binaryData = new Uint8Array(r.data);
-            const buffer = Buffer.from(binaryData);
-            const base64String =
-              `data:${mimeType};base64,` + buffer.toString("base64");
-            //console.log("Base64: " + base64String);
-            await repli(base64String)
-              .then((rep) => {
-                reply = rep
-                sendMessage(phone_number_id, from, reply);
-                res.sendStatus(200);
-                res.end();
-              })
-              .catch((error) => {
-                console.log("Repli Error: " + error);
-                res.sendStatus(500);
-              });
-          });
-        })
-        .catch((error) => {
-          console.log("Error: " + error);
-          res.sendStatus(500);
-        });
+      });
+
+      const { url, mime_type: mimeType } = response.data;
+
+      const imageResponse = await axios({
+        method: "GET",
+        url,
+        maxBodyLength: Infinity,
+        responseType: "arraybuffer",
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+
+      const binaryData = new Uint8Array(imageResponse.data);
+      const buffer = Buffer.from(binaryData);
+      const base64String = `data:${mimeType};base64,${buffer.toString("base64")}`;
+
+      const repliResponse = await repli(base64String);
+      reply = repliResponse;
     }
+
+    sendMessage(phone_number_id, from, reply);
+    res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
   }
-  res.status(200).send("EVENT_RECEIVED");
 });
+
 
 //Replicate Part
 
@@ -203,21 +161,6 @@ const repliPrompt = async (prompt) => {
   return output;
 };
 
-//To get the list of models
-// axios({
-//   method: "GET",
-//   url: "https://api.replicate.com/v1/collections/super-resolution",
-//   headers: {
-//     "Content-Type": "application/json",
-//     Authorization: `Token ${process.env.REPLICATE_API_TOKEN}`,
-//   },
-// })
-//   .then((response) => {
-//     console.log("Replicate Data: ", response.data);
-//   })
-//   .catch((error) => {
-//     console.log("Error: " + error);
-//   });
 
 app.use(express.static("public"));
 app.use(express.static("dist"));
