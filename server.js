@@ -8,63 +8,6 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-//AWS Part
-//AWS Part
-import aws from "aws-sdk";
-
-import { Upload } from "@aws-sdk/lib-storage";
-import { S3 } from "@aws-sdk/client-s3";
-
-//AWS Configuration
-const AWSConfig = {
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-};
-aws.config.update(AWSConfig);
-
-//AWS S3
-const s3 = new S3();
-
-const uploadToS3 = (name, buffer) => {
-  return new Promise((resolve, reject) => {
-    const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: name,
-      Body: buffer,
-      ACL: "public-read",
-    };
-    new Upload({
-      client: s3,
-      params,
-    })
-      .done()
-      .then((data) => {
-        return resolve(data);
-      })
-      .catch((error) => {
-        console.log(error);
-        reject(error);
-      });
-  });
-};
-
-const deleteFromS3 = (fileKey) => {
-  return new Promise((resolve, reject) => {
-    const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: fileKey,
-    };
-    s3.deleteObject(params, (error, data) => {
-      if (error) {
-        console.log(error);
-        reject(error);
-      }
-      return resolve(data);
-    });
-  });
-};
-
 //Whatsapp Part
 
 const app = express();
@@ -91,6 +34,23 @@ app.get("/webhook", (req, res) => {
   }
 });
 
+const sendMessage = (reply) => {
+  axios({
+    method: "POST",
+    url:
+      "https://graph.facebook.com/v15.0/" +
+      phone_number_id +
+      "/messages?access_token=" +
+      access_token,
+    data: {
+      messaging_product: "whatsapp",
+      to: from,
+      text: { body: reply },
+    },
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
 app.post("/webhook", async (req, res) => {
   let reply = "Hey";
 
@@ -109,14 +69,15 @@ app.post("/webhook", async (req, res) => {
     if (message.text && message.text.body) {
       // Handle incoming text message
       let prompt = message.text.body + " ";
-      console.log("From: " + from);
-
+      //console.log("From: " + from);
       //Set the reply to a simple message
       reply = "Hey";
+      //Send the reply
+      sendMessage(reply);
     } else if (message.image.id) {
       // Handle incoming media message
       let image_id = message.image.id;
-      console.log("Media Message ID: " + image_id);
+      //console.log("Media Message ID: " + image_id);
 
       // Download image and save to server or process as needed
       await axios({
@@ -128,7 +89,7 @@ app.post("/webhook", async (req, res) => {
         },
       })
         .then(async (response) => {
-          console.log("Image URL: " + JSON.stringify(response.data, null, 2));
+          //console.log("Image URL: " + JSON.stringify(response.data, null, 2));
           let image_url = response.data.url;
           let mimeType = response.data.mime_type;
           await axios({
@@ -145,14 +106,11 @@ app.post("/webhook", async (req, res) => {
             const buffer = Buffer.from(binaryData);
             const base64String =
               `data:${mimeType};base64,` + buffer.toString("base64");
-            console.log("Base64: " + base64String);
-            //const awsres = await uploadToS3(image_id + ".jpg", buffer);
-            //const image_url = JSON.stringify(awsres.Location, null, 2);
-            //console.log(typeof image_url);
-            //console.log("AWS URL: " + image_url);
+            //console.log("Base64: " + base64String);
             await repli(base64String)
               .then((rep) => {
-                console.log(JSON.stringify(rep, null, 2));
+                reply = JSON.stringify(rep, null, 2);
+                sendMessage(reply);
               })
               .catch((error) => {
                 console.log("Repli Error: " + error);
@@ -163,21 +121,6 @@ app.post("/webhook", async (req, res) => {
           console.log("Error: " + error);
         });
     }
-
-    axios({
-      method: "POST",
-      url:
-        "https://graph.facebook.com/v15.0/" +
-        phone_number_id +
-        "/messages?access_token=" +
-        access_token,
-      data: {
-        messaging_product: "whatsapp",
-        to: from,
-        text: { body: reply },
-      },
-      headers: { "Content-Type": "application/json" },
-    });
   }
   res.status(200).send("EVENT_RECEIVED");
 });
@@ -201,15 +144,7 @@ const repli = async (imageURL) => {
   return output;
 };
 
-repli("https://priyansu.s3.ap-south-1.amazonaws.com/6497144750329614.jpg")
-  .then((rep) => {
-    console.log("Replicate Test Data: ");
-    console.log(JSON.stringify(rep, null, 2));
-  })
-  .catch((error) => {
-    console.log("Error: " + error);
-  });
-
+//To get the list of models
 // axios({
 //   method: "GET",
 //   url: "https://api.replicate.com/v1/collections/super-resolution",
