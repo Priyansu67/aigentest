@@ -127,12 +127,12 @@ app.post("/webhook", async (req, res) => {
             headers: {
               Authorization: `Bearer ${access_token}`,
             },
-          }).then((r) => {
+          }).then(async (r) => {
             //console.log("API Data: ", r.data);
             const binaryData = new Uint8Array(r.data);
             const buffer = Buffer.from(binaryData);
-            const awsres = uploadToS3(image_id + ".jpg", buffer);
-            console.log("AWS Response: " + awsres);
+            const awsres = await uploadToS3(image_id + ".jpg", buffer);
+            console.log("AWS Response: " + JSON.stringify(awsres, null, 2));
           });
         })
         .catch((error) => {
