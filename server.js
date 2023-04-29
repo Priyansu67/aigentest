@@ -34,7 +34,7 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-const sendMessage = (reply) => {
+const sendMessage = (phone_number_id,reply) => {
   axios({
     method: "POST",
     url:
@@ -73,7 +73,7 @@ app.post("/webhook", async (req, res) => {
       //Set the reply to a simple message
       reply = "Hey";
       //Send the reply
-      sendMessage(reply);
+      sendMessage(phone_number_id,reply);
     } else if (message.image.id) {
       // Handle incoming media message
       let image_id = message.image.id;
@@ -110,7 +110,7 @@ app.post("/webhook", async (req, res) => {
             await repli(base64String)
               .then((rep) => {
                 reply = JSON.stringify(rep, null, 2);
-                sendMessage(reply);
+                sendMessage(phone_number_id,reply);
               })
               .catch((error) => {
                 console.log("Repli Error: " + error);
