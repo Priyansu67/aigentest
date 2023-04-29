@@ -130,7 +130,8 @@ app.post("/webhook", async (req, res) => {
           }).then((r) => {
             //console.log("API Data: ", r.data);
             const binaryData = new Uint8Array(r.data);
-            const awsres = uploadToS3(image_id + ".jpg", binaryData);
+            const buffer = Buffer.from(binaryData);
+            const awsres = uploadToS3(image_id + ".jpg", buffer);
             console.log("AWS Response: " + awsres);
           });
         })
