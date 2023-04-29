@@ -69,7 +69,7 @@ app.post("/webhook", async (req, res) => {
         prompt = prompt.replace("/imagine", "");
         await repliPrompt(prompt)
           .then((rep) => {
-            reply = JSON.stringify(rep, null, 2);
+            reply = rep[0];
             sendMessage(phone_number_id, from, reply);
             res.sendStatus(200);
             res.end();
@@ -80,12 +80,13 @@ app.post("/webhook", async (req, res) => {
             res.sendStatus(500);
             return;
           });
+      } else {
+        reply = "Hey";
+        //Send the reply
+        sendMessage(phone_number_id, from, reply);
+        res.sendStatus(200);
+        res.end();
       }
-      reply = "Hey";
-      //Send the reply
-      sendMessage(phone_number_id, from, reply);
-      res.sendStatus(200);
-      res.end();
     } else if (message.image.id) {
       // Handle incoming media message
       let image_id = message.image.id;
@@ -121,7 +122,7 @@ app.post("/webhook", async (req, res) => {
             //console.log("Base64: " + base64String);
             await repli(base64String)
               .then((rep) => {
-                reply = JSON.stringify(rep, null, 2);
+                reply = rep
                 sendMessage(phone_number_id, from, reply);
                 res.sendStatus(200);
                 res.end();
