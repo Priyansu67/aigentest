@@ -1,5 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
+import { Configuration, OpenAIApi } from "@openai/api";
 import path from "path";
 import axios from "axios";
 import Replicate from "replicate";
@@ -7,6 +8,29 @@ import fetch from "node-fetch";
 import * as dotenv from "dotenv";
 
 dotenv.config();
+
+//Chat GPT
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
+
+async function botMessage(prompt) {
+  const completion = await openai.createCompletion({
+    model: "text-davinci-003",
+    prompt: prompt,
+    max_tokens: 2048,
+    temperature: 0.7,
+    top_p: 1,
+    presence_penalty: 0,
+    frequency_penalty: 0,
+  });
+  
+  console.log(JSON.stringify(completion.data, null, 1));
+  return completion.data.choices[0].text;
+}
 
 //Whatsapp Part
 
@@ -81,7 +105,7 @@ app.post("/webhook", async (req, res) => {
             return;
           });
       } else {
-        reply = "Hey";
+        reply = await botMessage(prompt);
         //Send the reply
         sendMessage(phone_number_id, from, reply);
         res.sendStatus(200);
