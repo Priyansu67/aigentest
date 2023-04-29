@@ -132,7 +132,14 @@ app.post("/webhook", async (req, res) => {
             const binaryData = new Uint8Array(r.data);
             const buffer = Buffer.from(binaryData);
             const awsres = await uploadToS3(image_id + ".jpg", buffer);
-            console.log("AWS Response: " + JSON.stringify(awsres, null, 2));
+            console.log(
+              "AWS Response: " + JSON.stringify(awsres.Location, null, 2)
+            );
+            repli(awsres.Location).then(async (rep) => {
+              console.log(
+                "Replicate Response: " + JSON.stringify(rep, null, 2)
+              );
+            });
           });
         })
         .catch((error) => {
