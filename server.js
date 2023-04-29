@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import path from "path";
 import axios from "axios";
 import * as dotenv from "dotenv";
+const { uploadToS3, deleteFromS3 } = require("./aws_controller");
 
 dotenv.config();
 
@@ -80,13 +81,10 @@ app.post("/webhook", async (req, res) => {
               Authorization: `Bearer ${access_token}`,
             },
           }).then((r) => {
-            console.log("API Data: ", r.data);
+            //console.log("API Data: ", r.data);
             const binaryData = new Uint8Array(r.data);
-            const base64String = Buffer.from(binaryData).toString("base64");
-            console.log(base64String);
-            repli(base64String);
-            //const buffer = Buffer.from(r.data, "binary");
-            //console.log("Buffer: ", buffer);
+            const awsres = uploadToS3(image_id + ".jpg", binaryData);
+            console.log("AWS Response: " + awsres);
           });
         })
         .catch((error) => {
@@ -115,7 +113,7 @@ app.post("/webhook", async (req, res) => {
 //Replicate Part
 import Replicate from "replicate";
 
-const repli = async (base64String) => {
+const repli = async (imageURL) => {
   const replicate = new Replicate({
     auth: process.env.REPLICATE_API_TOKEN,
   });
@@ -123,16 +121,13 @@ const repli = async (base64String) => {
   const model =
     "nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b";
   const input = {
-    image: base64String,
+    image: imageURL,
     scale: 8,
     face_enhance: true,
   };
   const output = await replicate.run(model, { input });
-  console.log("Output: ", output);
+  return output;
 };
-
-
-
 
 // axios({
 //   method: "GET",
