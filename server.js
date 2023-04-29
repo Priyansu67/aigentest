@@ -34,7 +34,7 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-const sendMessage = (phone_number_id,from,reply) => {
+const sendMessage = (phone_number_id, from, reply) => {
   axios({
     method: "POST",
     url:
@@ -55,25 +55,37 @@ app.post("/webhook", async (req, res) => {
   let reply = "Hey";
 
   if (req.body.entry[0].changes[0].value.messages) {
-    // Get the phone number ID
     let phone_number_id =
       req.body.entry[0].changes[0].value.metadata.phone_number_id;
-
-    // Get the sender's phone number
     let from = req.body.entry[0].changes[0].value.messages[0].from;
-
-    // Get the message sent to your number
     let message = req.body.entry[0].changes[0].value.messages[0];
-    console.log("JSON: " + JSON.stringify(message));
 
     if (message.text && message.text.body) {
       // Handle incoming text message
       let prompt = message.text.body + " ";
       //console.log("From: " + from);
       //Set the reply to a simple message
+      if (prompt.startsWith("/imagine")) {
+        prompt = prompt.replace("/imagine", "");
+        await repliPrompt(prompt)
+          .then((rep) => {
+            reply = JSON.stringify(rep, null, 2);
+            sendMessage(phone_number_id, from, reply);
+            res.sendStatus(200);
+            res.end();
+            return;
+          })
+          .catch((error) => {
+            console.log("Repli Error: " + error);
+            res.sendStatus(500);
+            return;
+          });
+      }
       reply = "Hey";
       //Send the reply
-      sendMessage(phone_number_id,from,reply);
+      sendMessage(phone_number_id, from, reply);
+      res.sendStatus(200);
+      res.end();
     } else if (message.image.id) {
       // Handle incoming media message
       let image_id = message.image.id;
@@ -110,15 +122,19 @@ app.post("/webhook", async (req, res) => {
             await repli(base64String)
               .then((rep) => {
                 reply = JSON.stringify(rep, null, 2);
-                sendMessage(phone_number_id,from,reply);
+                sendMessage(phone_number_id, from, reply);
+                res.sendStatus(200);
+                res.end();
               })
               .catch((error) => {
                 console.log("Repli Error: " + error);
+                res.sendStatus(500);
               });
           });
         })
         .catch((error) => {
           console.log("Error: " + error);
+          res.sendStatus(500);
         });
     }
   }
@@ -137,6 +153,24 @@ const repli = async (imageURL) => {
     "nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b";
   const input = {
     image: imageURL,
+    scale: 8,
+    face_enhance: true,
+  };
+  const output = await replicate.run(model, { input });
+  return output;
+};
+
+const repliPrompt = async (prompt) => {
+  const replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN,
+    fetch: fetch,
+  });
+
+  const model =
+    "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf";
+
+  const input = {
+    prompt: prompt,
     scale: 8,
     face_enhance: true,
   };
