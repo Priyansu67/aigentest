@@ -51,8 +51,8 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-const sendMessage = (phone_number_id, from, reply) => {
-  axios({
+const sendMessage = async (phone_number_id, from, reply) => {
+  await axios({
     method: "POST",
     url:
       "https://graph.facebook.com/v15.0/" +
@@ -121,7 +121,11 @@ app.post("/webhook", async (req, res) => {
       reply = repliResponse;
     }
 
-    sendMessage(phone_number_id, from, reply);
+    await sendMessage(phone_number_id, from, reply).catch(
+      (error) => {
+        console.log(error);
+      }
+    );
     res.sendStatus(200);
   } catch (error) {
     console.log(error);
