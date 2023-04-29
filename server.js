@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import path from "path";
 import axios from "axios";
 import * as dotenv from "dotenv";
-const { uploadToS3, deleteFromS3 } = require("./aws_controller");
+import { uploadToS3, deleteFromS3 } from "./aws_controller";
 
 dotenv.config();
 
