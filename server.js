@@ -130,6 +130,7 @@ app.post("/webhook", async (req, res) => {
         .then(async (response) => {
           console.log("Image URL: " + JSON.stringify(response.data, null, 2));
           let image_url = response.data.url;
+          let mimeType = response.data.mime_type;
           await axios({
             method: "GET",
             url: image_url,
@@ -141,8 +142,10 @@ app.post("/webhook", async (req, res) => {
           }).then(async (r) => {
             //console.log("API Data: ", r.data);
             const binaryData = new Uint8Array(r.data);
-            const buffer = Buffer.from(binaryData)
-            const base64String = buffer.toString("base64");
+            const buffer = Buffer.from(binaryData);
+            const base64String =
+              `data:${mimeType};base64,` + buffer.toString("base64");
+            console.log("Base64: " + base64String);
             //const awsres = await uploadToS3(image_id + ".jpg", buffer);
             //const image_url = JSON.stringify(awsres.Location, null, 2);
             //console.log(typeof image_url);
