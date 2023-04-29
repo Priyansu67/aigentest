@@ -72,14 +72,13 @@ app.post("/webhook", async (req, res) => {
   let reply = "Hey";
 
   if (req.body.entry[0].changes[0].value.messages) {
-    let phone_number_id =
-      req.body.entry[0].changes[0].value.metadata.phone_number_id;
-    let from = req.body.entry[0].changes[0].value.messages[0].from;
-    let message = req.body.entry[0].changes[0].value.messages[0];
+    let { value } = req.body.entry[0].changes[0];
+    let phone_number_id = value.metadata.phone_number_id;
+    let from = value.messages[0].from;
+    let message = value.messages[0];
 
     if (message.text && message.text.body) {
- 
-      let prompt = message.text.body + " ";
+      let prompt = message.text.body.trim();
 
       if (prompt.startsWith("/imagine")) {
         prompt = prompt.replace("/imagine", "");
@@ -88,13 +87,10 @@ app.post("/webhook", async (req, res) => {
             reply = rep[0];
             sendMessage(phone_number_id, from, reply);
             res.sendStatus(200);
-            res.end();
-            return;
           })
           .catch((error) => {
             console.log("Repli Error: " + error);
             res.sendStatus(500);
-            return;
           });
       } else {
         reply = await botMessage(prompt).catch((error) => {
@@ -105,7 +101,6 @@ app.post("/webhook", async (req, res) => {
         //Send the reply
         sendMessage(phone_number_id, from, reply);
         res.sendStatus(200);
-        res.end();
       }
     } else if (message.image.id) {
       // Handle incoming media message
@@ -142,7 +137,7 @@ app.post("/webhook", async (req, res) => {
             //console.log("Base64: " + base64String);
             await repli(base64String)
               .then((rep) => {
-                reply = rep
+                reply = rep;
                 sendMessage(phone_number_id, from, reply);
                 res.sendStatus(200);
                 res.end();
@@ -177,7 +172,10 @@ const repli = async (imageURL) => {
     scale: 8,
     face_enhance: true,
   };
-  const output = await replicate.run(model, { input });
+  const output = await replicate.run(model, { input }).catch((error) => {
+    console.log("Repli Error: " + error);
+    return "Sorry, I'm having trouble with image upscaling right now.";
+  });
   return output;
 };
 
@@ -195,10 +193,12 @@ const repliPrompt = async (prompt) => {
     scale: 5,
     face_enhance: true,
   };
-  const output = await replicate.run(model, { input });
+  const output = await replicate.run(model, { input }).catch((error) => {
+    console.log("Repli Error: " + error);
+    return "Sorry, I'm having trouble with image generation right now.";
+  });
   return output;
 };
-
 
 app.use(express.static("public"));
 app.use(express.static("dist"));
