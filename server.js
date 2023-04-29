@@ -1,6 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { Configuration, OpenAIApi } from "@openai/api";
+import { Configuration, OpenAIApi } from "openai";
 import path from "path";
 import axios from "axios";
 import Replicate from "replicate";
