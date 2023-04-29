@@ -2,12 +2,17 @@ import express from "express";
 import bodyParser from "body-parser";
 import path from "path";
 import axios from "axios";
+import Replicate from "replicate";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
 //AWS Part
+//AWS Part
 import aws from "aws-sdk";
+
+import { Upload } from "@aws-sdk/lib-storage";
+import { S3 } from "@aws-sdk/client-s3";
 
 //AWS Configuration
 const AWSConfig = {
@@ -18,7 +23,7 @@ const AWSConfig = {
 aws.config.update(AWSConfig);
 
 //AWS S3
-const s3 = new aws.S3();
+const s3 = new S3();
 
 const uploadToS3 = (name, buffer) => {
   return new Promise((resolve, reject) => {
@@ -28,13 +33,18 @@ const uploadToS3 = (name, buffer) => {
       Body: buffer,
       ACL: "public-read",
     };
-    s3.upload(params, (error, data) => {
-      if (error) {
+    new Upload({
+      client: s3,
+      params,
+    })
+      .done()
+      .then((data) => {
+        return resolve(data);
+      })
+      .catch((error) => {
         console.log(error);
         reject(error);
-      }
-      return resolve(data);
-    });
+      });
   });
 };
 
@@ -135,11 +145,13 @@ app.post("/webhook", async (req, res) => {
             const image_url = JSON.stringify(awsres.Location, null, 2);
             console.log(typeof image_url);
             console.log("AWS URL: " + image_url);
-            await repli(image_url).then((rep) => {
-              console.log(JSON.stringify(rep, null, 2));
-            }).catch((error) => {
-              console.log("Repli Error: " + error);
-            });
+            await repli(image_url)
+              .then((rep) => {
+                console.log(JSON.stringify(rep, null, 2));
+              })
+              .catch((error) => {
+                console.log("Repli Error: " + error);
+              });
           });
         })
         .catch((error) => {
@@ -166,7 +178,6 @@ app.post("/webhook", async (req, res) => {
 });
 
 //Replicate Part
-import Replicate from "replicate";
 
 const repli = async (imageURL) => {
   const replicate = new Replicate({
@@ -188,7 +199,6 @@ repli("https://priyansu.s3.ap-south-1.amazonaws.com/6497144750329614.jpg")
   .then((rep) => {
     console.log("Replicate Test Data: ");
     console.log(JSON.stringify(rep, null, 2));
-
   })
   .catch((error) => {
     console.log("Error: " + error);
