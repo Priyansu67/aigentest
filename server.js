@@ -141,12 +141,13 @@ app.post("/webhook", async (req, res) => {
           }).then(async (r) => {
             //console.log("API Data: ", r.data);
             const binaryData = new Uint8Array(r.data);
-            const buffer = Buffer.from(binaryData);
-            const awsres = await uploadToS3(image_id + ".jpg", buffer);
-            const image_url = JSON.stringify(awsres.Location, null, 2);
-            console.log(typeof image_url);
-            console.log("AWS URL: " + image_url);
-            await repli(image_url)
+            const buffer = Buffer.from(binaryData)
+            const base64String = buffer.toString("base64");
+            //const awsres = await uploadToS3(image_id + ".jpg", buffer);
+            //const image_url = JSON.stringify(awsres.Location, null, 2);
+            //console.log(typeof image_url);
+            //console.log("AWS URL: " + image_url);
+            await repli(base64String)
               .then((rep) => {
                 console.log(JSON.stringify(rep, null, 2));
               })
@@ -189,7 +190,7 @@ const repli = async (imageURL) => {
   const model =
     "nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b";
   const input = {
-    image: `${imageURL}`,
+    image: imageURL,
     scale: 8,
     face_enhance: true,
   };
