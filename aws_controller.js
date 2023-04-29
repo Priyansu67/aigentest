@@ -1,4 +1,4 @@
-const s3 = require("./config/aws");
+import s3 from "./config/aws";
 
 
 
