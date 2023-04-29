@@ -135,7 +135,7 @@ app.post("/webhook", async (req, res) => {
             console.log(
               "AWS Response: " + JSON.stringify(awsres.Location, null, 2)
             );
-            const image_url = awsres.Location.toString();
+            const image_url = JSON.stringify(awsres.Location, null, 2);
             await repli(image_url).then((rep) => {
               console.log(JSON.stringify(rep, null, 2));
             }).catch((error) => {
