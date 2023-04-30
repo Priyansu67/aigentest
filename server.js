@@ -96,6 +96,7 @@ app.post("/webhook", async (req, res) => {
             Authorization: `Bearer ${access_token}`,
           },
         });
+        response.data && console.log("Image metadata received");
         const { url, mime_type: mimeType } = response.data.url;
         const r = await axios({
           method: "GET",
@@ -106,6 +107,7 @@ app.post("/webhook", async (req, res) => {
             Authorization: `Bearer ${access_token}`,
           },
         });
+        r.data && console.log("Image received");
         const binaryData = new Uint8Array(r.data);
         const buffer = Buffer.from(binaryData);
         const base64String =
