@@ -69,92 +69,57 @@ const sendMessage = (phone_number_id, from, reply) => {
 };
 
 app.post("/webhook", async (req, res) => {
-  let reply = "Hey";
-
-  if (req.body.entry[0].changes[0].value.messages) {
-    let { value } = req.body.entry[0].changes[0];
-    let phone_number_id = value.metadata.phone_number_id;
-    let from = value.messages[0].from;
-    let message = value.messages[0];
-
-    if (message.text && message.text.body) {
-      let prompt = message.text.body.trim();
-
-      if (prompt.startsWith("/imagine")) {
-        prompt = prompt.replace("/imagine", "");
-        await repliPrompt(prompt)
-          .then((rep) => {
-            reply = rep[0];
-            sendMessage(phone_number_id, from, reply);
-            res.sendStatus(200);
-          })
-          .catch((error) => {
-            console.log("Repli Error: " + error);
-            res.sendStatus(500);
-          });
-      } else {
-        reply = await botMessage(prompt).catch((error) => {
-          console.log("OpenAI Error: " + error);
-          res.sendStatus(500);
-          return "Sorry, I'm having trouble understanding you right now.";
+  try {
+    let reply = "Hey";
+    if (req.body.entry[0].changes[0].value.messages) {
+      let { value } = req.body.entry[0].changes[0];
+      let { phone_number_id } = value.metadata;
+      let { from } = value.messages[0];
+      let message = value.messages[0];
+      if (message.text && message.text.body) {
+        let prompt = message.text.body.trim();
+        if (prompt.startsWith("/imagine")) {
+          prompt = prompt.replace("/imagine", "");
+          const rep = await repliPrompt(prompt);
+          reply = rep[0];
+        } else {
+          reply = await botMessage(prompt);
+        }
+      } else if (message.image.id) {
+        // Handle incoming media message
+        const { id } = message.image;
+        const response = await axios({
+          method: "GET",
+          url: `https://graph.facebook.com/v15.0/${id}`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access_token}`,
+          },
         });
-        //Send the reply
-        sendMessage(phone_number_id, from, reply);
-        res.sendStatus(200);
+        const { url, mime_type: mimeType } = response.data.url;
+        const r = await axios({
+          method: "GET",
+          url: url,
+          maxBodyLength: Infinity,
+          responseType: "arraybuffer",
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        });
+        const binaryData = new Uint8Array(r.data);
+        const buffer = Buffer.from(binaryData);
+        const base64String =
+          `data:${mimeType};base64,` + buffer.toString("base64");
+        reply = await repli(base64String);
       }
-    } else if (message.image.id) {
-      // Handle incoming media message
-      let image_id = message.image.id;
-      //console.log("Media Message ID: " + image_id);
 
-      // Download image and save to server or process as needed
-      await axios({
-        method: "GET",
-        url: "https://graph.facebook.com/v15.0/" + image_id,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${access_token}`,
-        },
-      })
-        .then(async (response) => {
-          //console.log("Image URL: " + JSON.stringify(response.data, null, 2));
-          let image_url = response.data.url;
-          let mimeType = response.data.mime_type;
-          await axios({
-            method: "GET",
-            url: image_url,
-            maxBodyLength: Infinity,
-            responseType: "arraybuffer",
-            headers: {
-              Authorization: `Bearer ${access_token}`,
-            },
-          }).then(async (r) => {
-            //console.log("API Data: ", r.data);
-            const binaryData = new Uint8Array(r.data);
-            const buffer = Buffer.from(binaryData);
-            const base64String =
-              `data:${mimeType};base64,` + buffer.toString("base64");
-            //console.log("Base64: " + base64String);
-            await repli(base64String)
-              .then((rep) => {
-                reply = rep;
-                sendMessage(phone_number_id, from, reply);
-                res.sendStatus(200);
-                res.end();
-              })
-              .catch((error) => {
-                console.log("Repli Error: " + error);
-                res.sendStatus(500);
-              });
-          });
-        })
-        .catch((error) => {
-          console.log("Error: " + error);
-          res.sendStatus(500);
-        });
+      sendMessage(phone_number_id, from, reply);
     }
+    res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
   }
-  res.status(200).send("EVENT_RECEIVED");
 });
 
 //Replicate Part
