@@ -80,13 +80,13 @@ app.post("/webhook", async (req, res) => {
         let prompt = message.text.body.trim();
         if (prompt.startsWith("/imagine")) {
           prompt = prompt.replace("/imagine", "");
-          const rep = await repliPrompt(prompt);
-          reply = rep[0];
+          reply = await repliPrompt(prompt);
         } else {
-          reply = await botMessage(prompt);
+          reply = await botMessage("Human: " + prompt + "\n\n" + "AI: ");
         }
       } else if (message.image.id) {
         // Handle incoming media message
+        console.log("Upscaling request received from: " + from);
         const { id } = message.image;
         const response = await axios({
           method: "GET",
@@ -158,10 +158,14 @@ const repliPrompt = async (prompt) => {
     scale: 5,
     face_enhance: true,
   };
-  const output = await replicate.run(model, { input }).catch((error) => {
+  const output = await replicate.run(model, { input })
+  .then((out) => {
+    return out[0];
+  })
+  .catch((error) => {
     console.log("Repli Error: " + error);
     return "Sorry, I'm having trouble with image generation right now.";
-  });
+  })
   return output;
 };
 
