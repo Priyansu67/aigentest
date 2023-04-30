@@ -97,7 +97,7 @@ app.post("/webhook", async (req, res) => {
           },
         });
         response.data && console.log("Image metadata received");
-        const { url, mime_type: mimeType } = response.data.url;
+        const { url, mime_type: mimeType } = response.data;
         const r = await axios({
           method: "GET",
           url: url,
