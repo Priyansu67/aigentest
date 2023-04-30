@@ -141,7 +141,7 @@ const repli = async (imageURL) => {
   };
   const output = await replicate.run(model, { input }).catch((error) => {
     console.log("Repli Error: " + error);
-    return "Sorry, I'm having trouble with image upscaling right now.";
+    return "Sorry, I'm having trouble with image upscaling right now. Contact Priyansu Choudhury on Whatsapp at +917008339883 for help.";
   });
   return output;
 };
@@ -166,7 +166,7 @@ const repliPrompt = async (prompt) => {
   })
   .catch((error) => {
     console.log("Repli Error: " + error);
-    return "Sorry, I'm having trouble with image generation right now.";
+    return "Sorry, I'm having trouble with image generation right now. Contact Priyansu Choudhury on Whatsapp at +917008339883 for help.";
   })
   return output;
 };
