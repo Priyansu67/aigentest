@@ -13,16 +13,15 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 async function botMessage(prompt) {
-  const completion = await openai.createCompletion({
-    model: "text-davinci-003",
-    prompt: prompt,
-    max_tokens: 2048,
-    temperature: 0.7,
-    top_p: 1,
-    presence_penalty: 0,
-    frequency_penalty: 0,
+  const completion = await openai.createChatCompletion({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "You are a helpful assistant." },
+      { role: "user", content: prompt },
+    ],
   });
-  return completion.data.choices[0].text;
+
+  return completion.data.choices[0].message;
 }
 
 //Whatsapp Part
@@ -160,14 +159,15 @@ const repliPrompt = async (prompt) => {
     scale: 5,
     face_enhance: true,
   };
-  const output = await replicate.run(model, { input })
-  .then((out) => {
-    return out[0];
-  })
-  .catch((error) => {
-    console.log("Repli Error: " + error);
-    return "Sorry, I'm having trouble with image generation right now. Contact Priyansu Choudhury on Whatsapp at +917008339883 for help.";
-  })
+  const output = await replicate
+    .run(model, { input })
+    .then((out) => {
+      return out[0];
+    })
+    .catch((error) => {
+      console.log("Repli Error: " + error);
+      return "Sorry, I'm having trouble with image generation right now. Contact Priyansu Choudhury on Whatsapp at +917008339883 for help.";
+    });
   return output;
 };
 
