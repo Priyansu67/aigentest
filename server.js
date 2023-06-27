@@ -16,7 +16,7 @@ async function botMessage(prompt) {
   const completion = await openai.createChatCompletion({
     model: "gpt-4",
     messages: [
-      { role: "system", content: "You are a helpful assistant." },
+      { role: "system", content: "You are a helpful ai assistant." },
       { role: "user", content: prompt },
     ],
   });
